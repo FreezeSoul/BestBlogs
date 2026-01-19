@@ -1,0 +1,492 @@
+app:
+  description: 利用大语言模型对播客分析的结果进行翻译
+  icon: 🤖
+  icon_background: '#FFE4E8'
+  mode: workflow
+  name: BestBlogs 播客分析结果翻译
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/openrouter:0.0.31@6d9f4aa9c5d2f7a0c5a7ca4870328fb8d93c5f8c04a0cf45a34976723ce4d502
+    version: null
+kind: app
+version: 0.5.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      allowed_file_extensions:
+      - .JPG
+      - .JPEG
+      - .PNG
+      - .GIF
+      - .WEBP
+      - .SVG
+      allowed_file_types:
+      - image
+      allowed_file_upload_methods:
+      - local_file
+      - remote_url
+      enabled: false
+      fileUploadConfig:
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        file_size_limit: 15
+        image_file_batch_limit: 10
+        image_file_size_limit: 10
+        single_chunk_attachment_limit: 10
+        video_file_size_limit: 100
+        workflow_file_upload_limit: 10
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+      number_limits: 3
+    opening_statement: ''
+    retriever_resource:
+      enabled: false
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInIteration: false
+        sourceType: start
+        targetType: http-request
+      id: 1718352852007-source-1719356422842-target
+      source: '1718352852007'
+      sourceHandle: source
+      target: '1719356422842'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: http-request
+        targetType: code
+      id: 1719356422842-source-1719357159255-target
+      source: '1719356422842'
+      sourceHandle: source
+      target: '1719357159255'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: code
+        targetType: if-else
+      id: 1719357159255-source-1747011839276-target
+      source: '1719357159255'
+      sourceHandle: source
+      target: '1747011839276'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: if-else
+        targetType: llm
+      id: 1747011839276-true-1719665970105-target
+      source: '1747011839276'
+      sourceHandle: 'true'
+      target: '1719665970105'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: if-else
+        targetType: end
+      id: 1747011839276-false-1747011862569-target
+      source: '1747011839276'
+      sourceHandle: 'false'
+      target: '1747011862569'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: end
+      id: 1719665970105-source-1719666292377-target
+      source: '1719665970105'
+      sourceHandle: source
+      target: '1719666292377'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        desc: 输入播客 Id
+        selected: false
+        title: 开始
+        type: start
+        variables:
+        - label: BestBlogs 播客 Id
+          max_length: 20
+          options: []
+          required: true
+          type: text-input
+          variable: input_article_id
+      height: 137
+      id: '1718352852007'
+      position:
+        x: 30
+        y: 386
+      positionAbsolute:
+        x: 30
+        y: 386
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        authorization:
+          config: null
+          type: no-auth
+        body:
+          data:
+          - type: text
+            value: ''
+          type: none
+        desc: ''
+        headers: ''
+        method: get
+        params: id:{{#1718352852007.input_article_id#}}
+        retry_config:
+          max_retries: 2
+          retry_enabled: true
+          retry_interval: 1000
+        selected: false
+        ssl_verify: true
+        timeout:
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+        title: 获取播客转录信息
+        type: http-request
+        url: https://api.bestblogs.dev/dify/resource/podcast/transcription
+        variables: []
+      height: 154
+      id: '1719356422842'
+      position:
+        x: 362
+        y: 386
+      positionAbsolute:
+        x: 362
+        y: 386
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        code: "import json\n\ndef main(json_body):\n    \"\"\"\n    处理 REST 请求返回的\
+          \ JSON 字符串。\n    \n    若输入为空字符串或JSON解析失败，则返回 {'success': 'false'}。\n   \
+          \ 若 JSON 字符串解析成功且 'success' 为 'true'，则返回包含指定键值的字典。\n    否则返回 {'success':\
+          \ 'false'}。\n\n    参数:\n        json_body (str): 包含 JSON 数据的字符串。\n    \n\
+          \    返回:\n        dict: 包含 'success' 键和指定的数据键值对的字典。\n    \"\"\"\n    \n\
+          \    result = {'success': 'false'}\n    \n    if not json_body:\n      \
+          \  return result\n\n    try:\n        data = json.loads(json_body)\n   \
+          \     if isinstance(data, dict) and data.get('success') == 'true':\n   \
+          \         result['success'] = 'true'\n            result['contentXml'] =\
+          \ data.get('contentXml', '')\n            result['languageName'] = data.get('languageName',\
+          \ '中文')\n            result['destLanguageName'] = data.get('destLanguageName',\
+          \ '英文')\n            result['analysisResult'] = data.get('analysisResult',\
+          \ '')\n        return result\n    except json.JSONDecodeError:\n       \
+          \ return result\n    except Exception:\n        return result"
+        code_language: python3
+        desc: 解析请求结果
+        outputs:
+          analysisResult:
+            children: null
+            type: string
+          contentXml:
+            children: null
+            type: string
+          destLanguageName:
+            children: null
+            type: string
+          languageName:
+            children: null
+            type: string
+          success:
+            children: null
+            type: string
+        selected: false
+        title: 解析播客转录信息
+        type: code
+        variables:
+        - value_selector:
+          - '1719356422842'
+          - body
+          variable: json_body
+      height: 80
+      id: '1719357159255'
+      position:
+        x: 694
+        y: 386
+      positionAbsolute:
+        x: 694
+        y: 386
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: 直接翻译
+        model:
+          completion_params:
+            max_tokens: 3000
+            temperature: 0.3
+          mode: chat
+          name: google/gemini-3-flash-preview
+          provider: langgenius/openrouter/openrouter
+        prompt_template:
+        - id: 9f405119-fd90-46f9-9479-312561ef194c
+          role: system
+          text: '# AI 翻译专家
+
+
+            ## 角色
+
+            播客文字稿结构化分析结果的翻译专家，擅长 AI、编程、产品、设计、商业和科技领域。阅读给定的原始语言和目标语言，直接输出翻译后的 JSON，无需任何前言或后记。
+
+
+            ## 任务
+
+            将 JSON 格式的文章分析结果翻译为目标语言，直接输出高质量翻译结果。
+
+
+            - 原始语言：{{#1719357159255.languageName#}}
+
+            - 目标语言：{{#1719357159255.destLanguageName#}}
+
+
+            ## 输入结构说明
+
+            输入 JSON 包含以下字段：
+
+            - title: 播客标题
+
+            - oneSentenceSummary: 一句话总结
+
+            - summary: 全文摘要
+
+            - tags: 标签列表
+
+            - mainPoints: 主要观点（包含 point 和 explanation）
+
+            - keyQuotes: 关键引用
+
+
+            ## 核心翻译原则
+
+
+            **术语处理**
+
+            - 保留常用技术缩写：AI、UX、LLM、API、SDK、UI、ML、NLP、GPT 等
+
+            - AI 领域：Agent → 智能体，Memory → 记忆
+
+            - 人名、公司名、产品名保持原文或直接翻译，不加括号注释
+
+            - 全文术语翻译保持一致
+
+
+            **语言表达**
+
+            - 意译而非直译，符合目标语言表达习惯
+
+            - 保持原文语气和风格
+
+            - 面向技术人员的阅读需求
+
+
+            **格式要求**
+
+            - 中文与英文、数字之间添加空格
+
+            - 保持原 JSON 结构和 key 名称不变
+
+
+            ## ⚠️ 输出要求（必须严格遵守）
+
+
+            **只输出翻译后的 JSON 字符串，不输出任何其他内容。**
+
+
+            禁止：
+
+            - 任何解释、说明、思考过程
+
+            - 括号注释（如 "某某（公司名）"）
+
+            - 术语列表、翻译说明
+
+            - JSON 前后的任何文本'
+        - id: 7c8529ca-9914-42e7-9132-299528454ba1
+          role: user
+          text: '待翻译的JSON字符串：
+
+
+            ```json
+
+            {{#1719357159255.analysisResult#}}
+
+            ```'
+        selected: true
+        structured_output:
+          schema:
+            additionalProperties: false
+            properties:
+              keyQuotes:
+                description: 翻译后的播客金句引用
+                items:
+                  type: string
+                type: array
+              mainPoints:
+                description: 翻译后的主要观点，包括观点 point 和解释说明 explanation 两个属性
+                items:
+                  additionalProperties: false
+                  properties: {}
+                  required: []
+                  type: object
+                type: array
+              oneSentenceSummary:
+                description: 翻译后的一句话摘要
+                type: string
+              summary:
+                description: 翻译后的完整摘要
+                type: string
+              tags:
+                description: 翻译后的标签
+                items:
+                  type: string
+                type: array
+              title:
+                description: 翻译后的播客标题
+                type: string
+            required: []
+            type: object
+        structured_output_enabled: true
+        title: 直接翻译
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 116
+      id: '1719665970105'
+      position:
+        x: 1449
+        y: 258
+      positionAbsolute:
+        x: 1449
+        y: 258
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        desc: 返回翻译结果
+        outputs:
+        - value_selector:
+          - '1719665970105'
+          - structured_output
+          value_type: object
+          variable: analysisResult
+        selected: false
+        title: 结束 2
+        type: end
+      height: 116
+      id: '1719666292377'
+      position:
+        x: 1882.1428571428569
+        y: 240.85714285714283
+      positionAbsolute:
+        x: 1882.1428571428569
+        y: 240.85714285714283
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        cases:
+        - case_id: 'true'
+          conditions:
+          - comparison_operator: is
+            id: 7cd2f910-eb44-44e0-8921-8c7ebb0704ff
+            value: 'true'
+            varType: string
+            variable_selector:
+            - '1719357159255'
+            - success
+          id: 'true'
+          logical_operator: and
+        desc: ''
+        selected: false
+        title: 判断是否解析成功
+        type: if-else
+      height: 124
+      id: '1747011839276'
+      position:
+        x: 1026
+        y: 386
+      positionAbsolute:
+        x: 1026
+        y: 386
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        desc: ''
+        outputs:
+        - value_selector:
+          - '1718352852007'
+          - input_article_id
+          value_type: string
+          variable: analysisResult
+        selected: false
+        title: 返回空结果
+        type: end
+      height: 88
+      id: '1747011862569'
+      position:
+        x: 1781
+        y: 438
+      positionAbsolute:
+        x: 1781
+        y: 438
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    viewport:
+      x: 224.36000000000013
+      y: 15.460000000000036
+      zoom: 0.84
+  rag_pipeline_variables: []

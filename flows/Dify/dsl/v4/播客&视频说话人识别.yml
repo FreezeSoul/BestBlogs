@@ -1,0 +1,289 @@
+app:
+  description: 基于播客和视频基础信息快速推测参与人信息
+  icon: 🤖
+  icon_background: '#FFEAD5'
+  mode: workflow
+  name: 播客&视频说话人识别
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/openrouter:0.0.31@6d9f4aa9c5d2f7a0c5a7ca4870328fb8d93c5f8c04a0cf45a34976723ce4d502
+    version: null
+kind: app
+version: 0.5.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      allowed_file_extensions:
+      - .JPG
+      - .JPEG
+      - .PNG
+      - .GIF
+      - .WEBP
+      - .SVG
+      allowed_file_types:
+      - image
+      allowed_file_upload_methods:
+      - local_file
+      - remote_url
+      enabled: false
+      fileUploadConfig:
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        file_size_limit: 15
+        image_file_batch_limit: 10
+        image_file_size_limit: 10
+        single_chunk_attachment_limit: 10
+        video_file_size_limit: 100
+        workflow_file_upload_limit: 10
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+      number_limits: 3
+    opening_statement: ''
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: start
+        targetType: llm
+      id: 1766042101661-source-1766042106268-target
+      source: '1766042101661'
+      sourceHandle: source
+      target: '1766042106268'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: end
+      id: 1766042106268-source-1766042110464-target
+      source: '1766042106268'
+      sourceHandle: source
+      target: '1766042110464'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        selected: false
+        title: 用户输入
+        type: start
+        variables:
+        - default: ''
+          hint: ''
+          label: 订阅源名称
+          max_length: 256
+          options: []
+          placeholder: ''
+          required: true
+          type: text-input
+          variable: source_name
+        - default: ''
+          hint: ''
+          label: 订阅源作者
+          max_length: 256
+          options: []
+          placeholder: ''
+          required: true
+          type: text-input
+          variable: source_author
+        - default: ''
+          hint: ''
+          label: 订阅源备注
+          max_length: 1024
+          options: []
+          placeholder: ''
+          required: false
+          type: paragraph
+          variable: source_description
+        - default: ''
+          hint: ''
+          label: 标题
+          max_length: 256
+          options: []
+          placeholder: ''
+          required: true
+          type: text-input
+          variable: title
+        - default: ''
+          hint: ''
+          label: Show Notes
+          max_length: 20000
+          options: []
+          placeholder: ''
+          required: false
+          type: paragraph
+          variable: show_notes
+      height: 213
+      id: '1766042101661'
+      position:
+        x: 0
+        y: 0
+      positionAbsolute:
+        x: 0
+        y: 0
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        model:
+          completion_params:
+            max_tokens: 2000
+            response_format: json_object
+            temperature: 0.3
+          mode: chat
+          name: google/gemini-2.5-flash
+          provider: langgenius/openrouter/openrouter
+        prompt_template:
+        - id: 80f2c115-0adc-469a-adc4-e921a6f5fd9a
+          role: system
+          text: "# Role\n你是一个资深的播客与视频内容元数据分析专家。你的核心能力是清洗杂乱的文本信息，跨语言（中文/英文）精准提取“说话人（Speaker）”实体。\n\
+            \n# Goal\n分析输入的 XML 结构化数据，推断本期节目的说话人数量（speakerCount）、具体姓名（speakerNames），并给出推理依据（reason）。\n\
+            \n# Analysis Logic (Step-by-Step)\n\n## 1. 说话人数量判定 (speakerCount)\n请综合标题、描述和作者信息进行判断：\n\
+            - **返回 -1 (未知/无效)**：\n  - 信息量极低（如标题仅为日期、编号，且描述为空或仅有链接）。\n  - 纯音乐、白噪音、ASMR\
+            \ 类非语言节目 (Non-verbal content)。\n  - 无法确定是单人还是多人，且无任何名称线索。\n- **返回 1 (单人)**：\n\
+            \  - 关键词 (CN)：独白、Solo、个人分享、Vlog、单口。\n  - 关键词 (EN)：Solo, My thoughts, Vlog,\
+            \ Day in the life, Monologue.\n  - 仅有一位主播且明确无嘉宾。\n- **返回 2 (对谈/访谈)**：\n\
+            \  - 关键词 (CN)：对话、访谈、&、VS、携手、嘉宾。\n  - 关键词 (EN)：Interview, Guest, Chat with,\
+            \ ft., versus, conversation with.\n  - 典型的“主播 + 嘉宾”模式。\n- **返回 3+ (多人)**：\n\
+            \  - 关键词 (CN)：圆桌、群聊、三人行。\n  - 关键词 (EN)：Panel, Roundtable, Group chat,\
+            \ Squad.\n  - 提取到的有效人名数量 >= 3。\n\n## 2. 说话人姓名提取 (speakerNames)\n- **数据源优先级**：ShowNotes\
+            \ > Title > Source Author > Source Description。\n- **提取规则**：\n  - 提取“主播”、“Host”、“嘉宾”、“Guest”、“With”后的姓名。\n\
+            \  - 若 ShowNotes 未提及主播，但 Source Author 是人名（非机构名），可将其视为主播。\n- **清洗规则 (非常重要)**：\n\
+            \  - **去除前缀**：不要包含“Host:”、“Guest:”、“@”等字符，只保留人名本身。\n  - **合并同义**：如果“Jack”和“Jacky”指代同一人，只输出全名或最常用的名字。\n\
+            - **负向约束 (Negative Constraints)**：\n  - **绝对禁止**提取以下角色：后期(Editor)、剪辑、制作人(Producer)、BGM、设计、赞助商(Sponsor)。\n\
+            \  - 不要编造不存在的名字。\n\n# Output Format\n仅输出标准的 JSON 格式，不要包含 Markdown 代码块标记，不要包含任何解释性文字。\n\
+            \n```json\n{\n  \"speakerCount\": Integer, // -1, 1, 2, or more\n  \"\
+            speakerNames\": Array<String>, // [\"Name1\", \"Name2\"] or []\n  \"reason\"\
+            : String // 简短描述推理原因 (e.g., \"Identified 1 host and 1 guest in show_notes\"\
+            )\n}\n\n```\n\n# Few-Shot Examples\n\n## Example 1: 中文标准对谈 (CN Interview)\n\
+            \nInput:\n<input_context>\n<source_name>Web3 访谈</source_name>\n\n<title>对话以太坊创始人\
+            \ V神</title>\n<show_notes>本期嘉宾：Vitalik。主播：Kevin。后期：小王。</show_notes>\n\
+            </input_context>\nOutput:\n{\n\"speakerCount\": 2,\n\"speakerNames\":\
+            \ [\"Kevin\", \"Vitalik\"],\n\"reason\": \"ShowNotes明确标注了主播Kevin和嘉宾Vitalik，排除了后期人员。\"\
+            \n}\n\n## Example 2: 英文单人视频 (EN Solo/Vlog)\n\nInput:\n<input_context>\n\
+            <source_name>Marques Brownlee</source_name>\n<source_author>MKBHD</source_author>\n\
+            \n<title>iPhone 15 Review: The Truth</title>\n<show_notes>My thoughts\
+            \ on the new iPhone. Shot on RED.</show_notes>\n</input_context>\nOutput:\n\
+            {\n\"speakerCount\": 1,\n\"speakerNames\": [\"MKBHD\"],\n\"reason\": \"\
+            Title indicates a review video, context implies solo host MKBHD, no guests\
+            \ mentioned.\"\n}\n\n## Example 3: 英文多人圆桌 (EN Panel)\n\nInput:\n<input_context>\n\
+            <source_name>All-In Podcast</source_name>\n\n<title>E142: Economy Outlook,\
+            \ AI regulation</title>\n<show_notes>Chamath, Jason, Sacks, and Friedberg\
+            \ discuss the macro environment.</show_notes>\n</input_context>\nOutput:\n\
+            {\n\"speakerCount\": 4,\n\"speakerNames\": [\"Chamath\", \"Jason\", \"\
+            Sacks\", \"Friedberg\"],\n\"reason\": \"ShowNotes lists 4 specific names\
+            \ discussing the topic.\"\n}\n\n## Example 4: 信息不足 (Unknown/-1)\n\nInput:\n\
+            <input_context>\n<source_name>Daily News</source_name>\n\n<title>2023-10-01\
+            \ Update</title>\n<show_notes>Link: http://example.com</show_notes>\n\
+            </input_context>\nOutput:\n{\n\"speakerCount\": -1,\n\"speakerNames\"\
+            : [],\n\"reason\": \"Title is generic date, notes contain only link, insufficient\
+            \ info to determine speakers.\"\n}\n\n## Example 5: 英文访谈 (EN Interview\
+            \ with 'ft.')\n\nInput:\n<input_context>\n<source_name>The Diary Of A\
+            \ CEO</source_name>\n<source_author>Steven Bartlett</source_author>\n\n\
+            <title>The Truth About Sugar ft. Jessie Inchauspé</title>\n<show_notes>In\
+            \ this episode I talk to the Glucose Goddess.</show_notes>\n</input_context>\n\
+            Output:\n{\n\"speakerCount\": 2,\n\"speakerNames\": [\"Steven Bartlett\"\
+            , \"Jessie Inchauspé\"],\n\"reason\": \"Title uses 'ft.' indicating a\
+            \ guest, author is the host.\"\n}"
+        - id: f564cc40-910a-4afb-b229-a3740c2e0c41
+          role: user
+          text: "开始分析下面的 `<input_context>` 内容，直接输出 JSON 结果。\n\n```xml\n<input_context>\n\
+            \  <source_name>{{#1766042101661.source_name#}}</source_name>\n  <source_author>{{#1766042101661.source_author#}}</source_author>\n\
+            \  <source_description>{{#1766042101661.source_description#}}</source_description>\n\
+            \  <title>{{#1766042101661.title#}}</title>\n  <show_notes>\n  {{#1766042101661.show_notes#}}\n\
+            \  </show_notes>\n</input_context>\n```"
+        selected: true
+        structured_output:
+          schema:
+            additionalProperties: false
+            properties:
+              reason:
+                description: 简短描述原因及备注信息
+                type: string
+              speakerCount:
+                description: 说话人数量
+                type: number
+              speakerNames:
+                description: 说话人名称
+                items:
+                  type: string
+                type: array
+            required:
+            - speakerCount
+            type: object
+        structured_output_enabled: true
+        title: LLM
+        type: llm
+        vision:
+          enabled: false
+      height: 88
+      id: '1766042106268'
+      position:
+        x: 342
+        y: 63
+      positionAbsolute:
+        x: 342
+        y: 63
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        outputs:
+        - value_selector:
+          - '1766042106268'
+          - structured_output
+          value_type: object
+          variable: analysisResult
+        selected: false
+        title: 输出
+        type: end
+      height: 88
+      id: '1766042110464'
+      position:
+        x: 684
+        y: 63
+      positionAbsolute:
+        x: 684
+        y: 63
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    viewport:
+      x: 223.7199999999999
+      y: 311.0999999999999
+      zoom: 1.008
+  rag_pipeline_variables: []

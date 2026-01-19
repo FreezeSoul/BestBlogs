@@ -1,0 +1,413 @@
+app:
+  description: 利用大语言模型对文章进行初评，判断是否需要进一步处理
+  icon: 🤖
+  icon_background: '#FFEAD5'
+  mode: workflow
+  name: BestBlogs 文章初评流程
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/openrouter:0.0.31@6d9f4aa9c5d2f7a0c5a7ca4870328fb8d93c5f8c04a0cf45a34976723ce4d502
+    version: null
+kind: app
+version: 0.5.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      allowed_file_extensions:
+      - .JPG
+      - .JPEG
+      - .PNG
+      - .GIF
+      - .WEBP
+      - .SVG
+      allowed_file_types:
+      - image
+      allowed_file_upload_methods:
+      - local_file
+      - remote_url
+      enabled: false
+      fileUploadConfig:
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        file_size_limit: 15
+        image_file_batch_limit: 10
+        image_file_size_limit: 10
+        single_chunk_attachment_limit: 10
+        video_file_size_limit: 100
+        workflow_file_upload_limit: 10
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+      number_limits: 3
+    opening_statement: ''
+    retriever_resource:
+      enabled: false
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInIteration: false
+        sourceType: start
+        targetType: http-request
+      id: 1718352852007-source-1719356422842-target
+      source: '1718352852007'
+      sourceHandle: source
+      target: '1719356422842'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: http-request
+        targetType: code
+      id: 1719356422842-source-1719357159255-target
+      source: '1719356422842'
+      sourceHandle: source
+      target: '1719357159255'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: llm
+        targetType: end
+      id: 1718355814693-source-1718356146046-target
+      source: '1718355814693'
+      sourceHandle: source
+      target: '1718356146046'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: code
+        targetType: if-else
+      id: 1719357159255-source-1720855943817-target
+      source: '1719357159255'
+      sourceHandle: source
+      target: '1720855943817'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: if-else
+        targetType: llm
+      id: 1720855943817-true-1718355814693-target
+      source: '1720855943817'
+      sourceHandle: 'true'
+      target: '1718355814693'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: if-else
+        targetType: end
+      id: 1720855943817-false-1747280525794-target
+      source: '1720855943817'
+      sourceHandle: 'false'
+      target: '1747280525794'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        desc: 输入文章 Id
+        selected: false
+        title: 开始
+        type: start
+        variables:
+        - label: BestBlogs 文章 Id
+          max_length: 20
+          options: []
+          required: true
+          type: text-input
+          variable: input_article_id
+      height: 137
+      id: '1718352852007'
+      position:
+        x: 0
+        y: 0
+      positionAbsolute:
+        x: 0
+        y: 0
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: 调用大语言模型对文章进行初评，用于判断是否值得继续阅读
+        model:
+          completion_params: {}
+          mode: chat
+          name: google/gemini-2.5-flash
+          provider: langgenius/openrouter/openrouter
+        prompt_template:
+        - id: 2e9ab6fb-4504-4891-95a1-39dff0e8ed6d
+          role: system
+          text: "(C) 上下文：你是一个高级内容分析助手，为一个面向技术从业者、创业者和产品经理的网站筛选文章。这个网站主要收集和分享有关软件开发、人工智能、产品管理、营销、设计、商业、科技和个人成长等领域的高质量内容。\n\
+            \n(O) 目标：你的任务是快速分析给定的文章，并决定是否应该忽略这篇文章。你需要识别出低价值、不相关或质量较差的内容，同时确保不会错过潜在的高价值文章。\n\
+            \n(S) 风格：请以一个经验丰富的内容策展人的风格来分析和评判文章。你应该简洁明了，直击要点，并能够快速识别出文章的核心价值。\n\n(T)\
+            \ 语气：保持专业、客观的语气。你的分析应该基于事实和明确的标准，而不是主观感受。\n\n(A) 受众：你的分析结果将被网站的内容管理团队使用，他们需要快速决策是否将文章纳入网站的内容库。\n\
+            \n(R) 响应：请使用中文以JSON格式输出你的分析结果，包括以下字段：\n- ignore: 布尔值，表示是否应该忽略这篇文章\n- reason:\
+            \ 字符串，简要说明做出该判断的主要原因（限30-50字）\n- value: 用0-5的整数评分表示文章的价值（0表示应被忽略，1-5表示价值等级）\n\
+            - summary: 用一句话总结文章的主要内容\n- language: 字符串，表示文章的语言类型（如\"中文\"、\"英文\"、\"\
+            日文\"等）\n\n请根据以下标准分析文章：\n\n1. 语言：是否为中文或英文。如果不是，直接忽略。\n2. 内容类型：是否为实质性内容，而非简单的公告、活动预热、广告、产品推荐或闲聊。\n\
+            3. 主题相关性：是否与目标领域相关（软件开发、人工智能、产品管理、营销、设计、商业、科技和个人成长等）。\n4. 质量和价值： \n  \
+            \ - 内容深度：是否提供深入见解、独特观点或有价值信息\n   - 技术深度：对于技术文章，评估其专业程度和技术细节\n   - 实用性：是否能启发思考或提供实用解决方案\n\
+            \n评分标准：\n- 0：应被忽略的文章（非中英文或完全不相关）\n- 1：低质量或基本不相关，不推荐阅读\n- 2：质量较低或相关性较弱，但可能有少量参考价值\n\
+            - 3：一般质量，内容相关且有一定深度，但缺乏独特见解或创新性，值得一读\n- 4：高质量，提供了有价值的见解或实用信息，推荐阅读\n- 5：极高质量，提供了深度分析、创新思路或重要解决方案，强烈推荐阅读\n\
+            \n文章的输入格式为 XML，包括以下字段：\n- `<title>`: 文章的标题\n- `<link>`: 文章的链接\n- `<source>`:\
+            \ 文章的来源\n- `<content>`: 文章的内容，使用 Markdown 格式并包含在 CDATA 中\n\n以下是一些输出示例，供你参考：\n\
+            \n示例1（高价值的技术文章）：\n{\n  \"ignore\": false,\n  \"reason\": \"深入探讨机器学习在推荐系统中的应用，有详细算法说明和代码示例\"\
+            ,\n  \"value\": 5,\n  \"summary\": \"详细介绍协同过滤算法构建推荐系统，包括理论解释和实现细节\",\n\
+            \  \"language\": \"英文\"\n}\n\n示例2（高质量的设计类文章）：\n{\n  \"ignore\": false,\n\
+            \  \"reason\": \"展示优秀UI设计案例，分析设计特点和用户体验考虑\",\n  \"value\": 4,\n  \"summary\"\
+            : \"展示10个创新移动应用UI设计，分析每个设计的特点和用户体验\",\n  \"language\": \"英文\"\n}\n\n示例3（相关且质量一般的文章）：\n\
+            {\n  \"ignore\": false,\n  \"reason\": \"讨论远程工作利弊，内容相关但缺乏深度见解\",\n  \"\
+            value\": 3,\n  \"summary\": \"探讨远程工作对生产力和协作的影响，列举常见挑战和解决方案\",\n  \"language\"\
+            : \"中文\"\n}\n\n示例4（过度营销倾向的文章）：\n{\n  \"ignore\": true,\n  \"reason\":\
+            \ \"过度营销，缺乏实质内容和独特见解\",\n  \"value\": 0,\n  \"summary\": \"宣传新项目管理工具，缺乏详细功能分析和用户案例\"\
+            ,\n  \"language\": \"中文\"\n}\n\n示例5（边界案例：相关但不够专业的文章）：\n{\n  \"ignore\"\
+            : false,\n  \"reason\": \"技术相关但偏向消费者建议，对部分读者有参考价值\",\n  \"value\": 2,\n\
+            \  \"summary\": \"评测2024年5款热门电脑鼠标，比较精准度、舒适性和价格\",\n  \"language\": \"\
+            中文\"\n}\n\n示例6（低价值的文章）：\n{\n  \"ignore\": true,\n  \"reason\": \"简单产品发布通知，缺乏实质内容\"\
+            ,\n  \"value\": 0,\n  \"summary\": \"某公司将发布新款智能手机，仅包含发布时间和地点信息\",\n  \"\
+            language\": \"中文\"\n}\n\n示例7（非目标语言的文章）：\n{\n  \"ignore\": true,\n  \"\
+            reason\": \"文章不是中文或英文\",\n  \"value\": 0,\n  \"summary\": \"文章语言不符合要求\"\
+            ,\n  \"language\": \"日文\"\n}\n\n示例8（ 电子产品推荐）：\n{\n  \"ignore\": true,\n\
+            \  \"reason\": \"推荐最新的苹果电子产品，不相关\",\n  \"value\": 1,\n  \"summary\": \"\
+            文章推荐了最近促销活动的苹果电脑等产品\",\n  \"language\": \"英文\"\n}\n\n请注意，即使对于建议忽略的文章，也要提供\
+            \ value、summary 和 language 字段。value 应该反映文章对目标受众的潜在价值，即使这个值很低或为0。summary\
+            \ 应该简要概括文章的主要内容，无论是否相关。language 字段应始终指明文章的语言类型。"
+        - id: cde18505-a2fe-45a5-a765-40dbe1c10c0f
+          role: user
+          text: "请根据要求基于以下文章进行分析，并输出指定格式的 JSON 字符串。\n\n<article>\n  <title>{{#1719357159255.title#}}</Title>\n\
+            \  <link>{{#1719357159255.url#}}</Link>\n  <source>{{#1719357159255.sourceName#}}</Source>\n\
+            \  <content>\n<![CDATA[\n{{#1719357159255.markdown#}}\n  ]]></content>\n\
+            </article>"
+        selected: false
+        title: 文章初评
+        type: llm
+        variables: []
+        vision:
+          configs:
+            detail: high
+            variable_selector: []
+          enabled: false
+      height: 132
+      id: '1718355814693'
+      position:
+        x: 1388
+        y: 15
+      positionAbsolute:
+        x: 1388
+        y: 15
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        desc: 输出结果
+        outputs:
+        - value_selector:
+          - '1718355814693'
+          - text
+          variable: analysisResult
+        selected: false
+        title: 返回文章初评结果
+        type: end
+      height: 116
+      id: '1718356146046'
+      position:
+        x: 1730
+        y: 23
+      positionAbsolute:
+        x: 1730
+        y: 23
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        authorization:
+          config: null
+          type: no-auth
+        body:
+          data:
+          - type: text
+            value: ''
+          type: none
+        desc: ''
+        headers: ''
+        method: get
+        params: id:{{#1718352852007.input_article_id#}}
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 100
+        selected: false
+        ssl_verify: true
+        timeout:
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+        title: 获取文章信息
+        type: http-request
+        url: https://api.bestblogs.dev/dify/resource/markdown
+        variables: []
+      height: 137
+      id: '1719356422842'
+      position:
+        x: 342
+        y: 0
+      positionAbsolute:
+        x: 342
+        y: 0
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        code: "import json\n\ndef main(json_body):\n    \"\"\"\n    处理 REST 请求返回的\
+          \ JSON 字符串。\n    \n    若输入为空字符串或JSON解析失败，则返回 {'success': 'false'}。\n   \
+          \ 若 JSON 字符串解析成功且 'success' 为 'true'，则返回包含指定键值的字典。\n    否则返回 {'success':\
+          \ 'false'}。\n\n    参数:\n        json_body (str): 包含 JSON 数据的字符串。\n    \n\
+          \    返回:\n        dict: 包含 'success' 键和指定的数据键值对的字典。\n    \"\"\"\n    \n\
+          \    result = {'success': 'false'}\n    \n    if not json_body:\n      \
+          \  return result\n\n    try:\n        data = json.loads(json_body)\n   \
+          \     if isinstance(data, dict) and data.get('success') == 'true':\n   \
+          \         result['success'] = 'true'\n            result['markdown'] = data.get('markdown',\
+          \ '')\n            result['sourceName'] = data.get('sourceName', '')\n \
+          \           result['title'] = data.get('title', '')\n            result['languageName']\
+          \ = data.get('languageName', '')\n            result['url'] = data.get('url',\
+          \ '')\n        return result\n    except json.JSONDecodeError:\n       \
+          \ return result\n    except Exception:\n        return result"
+        code_language: python3
+        desc: 解析请求结果
+        outputs:
+          languageName:
+            children: null
+            type: string
+          markdown:
+            children: null
+            type: string
+          sourceName:
+            children: null
+            type: string
+          success:
+            children: null
+            type: string
+          title:
+            children: null
+            type: string
+          url:
+            children: null
+            type: string
+        selected: false
+        title: 解析文章信息
+        type: code
+        variables:
+        - value_selector:
+          - '1719356422842'
+          - body
+          variable: json_body
+      height: 80
+      id: '1719357159255'
+      position:
+        x: 684
+        y: 29
+      positionAbsolute:
+        x: 684
+        y: 29
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        cases:
+        - case_id: 'true'
+          conditions:
+          - comparison_operator: is
+            id: '1720855947150'
+            value: 'true'
+            varType: string
+            variable_selector:
+            - '1719357159255'
+            - success
+          id: 'true'
+          logical_operator: and
+        desc: ''
+        selected: false
+        title: 判断是否获取内容成功
+        type: if-else
+      height: 124
+      id: '1720855943817'
+      position:
+        x: 1026
+        y: 7
+      positionAbsolute:
+        x: 1026
+        y: 7
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        desc: 返回空结果
+        outputs:
+        - value_selector:
+          - '1718352852007'
+          - input_article_id
+          value_type: string
+          variable: analysisResult
+        selected: false
+        title: 结束 2
+        type: end
+      height: 116
+      id: '1747280525794'
+      position:
+        x: 1388
+        y: 227
+      positionAbsolute:
+        x: 1388
+        y: 227
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    viewport:
+      x: 165
+      y: 291
+      zoom: 0.7
+  rag_pipeline_variables: []

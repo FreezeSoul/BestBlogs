@@ -1,0 +1,505 @@
+app:
+  description: 利用大语言模型对文章进行总结、摘要、分类和打标签，提取关键词、主要观点和文章金句，并进行结构化的评分
+  icon: 🤖
+  icon_background: '#FFEAD5'
+  mode: workflow
+  name: BestBlogs 推文分析流程
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/siliconflow:0.0.40@c8cea16fdefcc5691ad24460dc8e0eb1a3ff4741e14d36114b2c8532c1a0584d
+    version: null
+kind: app
+version: 0.5.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      allowed_file_extensions:
+      - .JPG
+      - .JPEG
+      - .PNG
+      - .GIF
+      - .WEBP
+      - .SVG
+      allowed_file_types:
+      - image
+      allowed_file_upload_methods:
+      - local_file
+      - remote_url
+      enabled: false
+      fileUploadConfig:
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        file_size_limit: 15
+        image_file_batch_limit: 10
+        image_file_size_limit: 10
+        single_chunk_attachment_limit: 10
+        video_file_size_limit: 100
+        workflow_file_upload_limit: 10
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+      number_limits: 3
+    opening_statement: ''
+    retriever_resource:
+      enabled: false
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInIteration: false
+        sourceType: start
+        targetType: http-request
+      id: 1718352852007-source-1719356422842-target
+      selected: false
+      source: '1718352852007'
+      sourceHandle: source
+      target: '1719356422842'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: http-request
+        targetType: code
+      id: 1719356422842-source-1719357159255-target
+      selected: false
+      source: '1719356422842'
+      sourceHandle: source
+      target: '1719357159255'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: if-else
+      id: 1719357159255-source-1747277767853-target
+      source: '1719357159255'
+      sourceHandle: source
+      target: '1747277767853'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: llm
+      id: 1747277767853-true-1719660406112-target
+      source: '1747277767853'
+      sourceHandle: 'true'
+      target: '1719660406112'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: if-else
+        targetType: end
+      id: 1747277767853-false-1747277797191-target
+      source: '1747277767853'
+      sourceHandle: 'false'
+      target: '1747277797191'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: end
+      id: 1719660406112-source-1718356146046-target
+      source: '1719660406112'
+      sourceHandle: source
+      target: '1718356146046'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        desc: 输入推文 Id
+        selected: false
+        title: 开始
+        type: start
+        variables:
+        - label: 推特 Id，多个用英文逗号连接
+          max_length: 256
+          options: []
+          required: true
+          type: text-input
+          variable: input_tweet_ids
+      height: 137
+      id: '1718352852007'
+      position:
+        x: 0
+        y: 0
+      positionAbsolute:
+        x: 0
+        y: 0
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        desc: 输出最终分析结果
+        outputs:
+        - value_selector:
+          - '1719660406112'
+          - text
+          value_type: string
+          variable: analysisResult
+        selected: false
+        title: 结束
+        type: end
+      height: 116
+      id: '1718356146046'
+      position:
+        x: 1730
+        y: 23
+      positionAbsolute:
+        x: 1730
+        y: 23
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        authorization:
+          config: null
+          type: no-auth
+        body:
+          data:
+          - type: text
+            value: ''
+          type: none
+        desc: 调用接口返回推文信息
+        headers: ''
+        method: get
+        params: ids:{{#1718352852007.input_tweet_ids#}}
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 100
+        selected: false
+        ssl_verify: true
+        timeout:
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+        title: 获取推文信息
+        type: http-request
+        url: https://api.bestblogs.dev/dify/resource/twitter
+        variables: []
+      height: 166
+      id: '1719356422842'
+      position:
+        x: 342
+        y: 0
+      positionAbsolute:
+        x: 342
+        y: 0
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        code: "import json\n\ndef main(json_body):\n    \"\"\"\n    处理 REST 请求返回的\
+          \ JSON 字符串。\n    \n    若输入为空字符串或JSON解析失败，则返回 {'success': 'false'}。\n   \
+          \ 若 JSON 字符串解析成功且 'success' 为 'true'，则返回包含指定键值的字典。\n    否则返回 {'success':\
+          \ 'false'}。\n\n    参数:\n        json_body (str): 包含 JSON 数据的字符串。\n    \n\
+          \    返回:\n        dict: 包含 'success' 键和指定的数据键值对的字典。\n    \"\"\"\n    \n\
+          \    result = {'success': 'false'}\n    \n    if not json_body:\n      \
+          \  return result\n\n    try:\n        data = json.loads(json_body)\n   \
+          \     if isinstance(data, dict) and data.get('success') == 'true':\n   \
+          \         result['success'] = 'true'\n            result['content'] = data.get('content',\
+          \ '')\n            result['languageName'] = data.get('languageName', '中文')\n\
+          \            result['destLanguageName'] = data.get('destLanguageName', '英文')\n\
+          \        return result\n    except json.JSONDecodeError:\n        return\
+          \ result\n    except Exception:\n        return result"
+        code_language: python3
+        desc: 解析请求结果
+        outputs:
+          content:
+            children: null
+            type: string
+          destLanguageName:
+            children: null
+            type: string
+          languageName:
+            children: null
+            type: string
+          success:
+            children: null
+            type: string
+        selected: false
+        title: 解析文章信息
+        type: code
+        variables:
+        - value_selector:
+          - '1719356422842'
+          - body
+          variable: json_body
+      height: 80
+      id: '1719357159255'
+      position:
+        x: 684
+        y: 29
+      positionAbsolute:
+        x: 684
+        y: 29
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: 直接对推文进行分析
+        model:
+          completion_params:
+            temperature: 0.3
+          mode: chat
+          name: deepseek-ai/DeepSeek-V3.2
+          provider: langgenius/siliconflow/siliconflow
+        prompt_template:
+        - edition_type: basic
+          id: 3a219dd6-2439-4a5c-beae-0a3b14961b8b
+          role: system
+          text: "# 推特技术内容分析与评估专家系统\n\n## 1. Context (上下文)\n\n你是一位专业的社交媒体技术内容分析专家，专注于分析\
+            \ Twitter/X 等平台上的短文本技术信息。你拥有敏锐的洞察力，能够快速从简短的推文中提取核心价值、评估其技术影响力和重要性。你的核心职责是处理以\
+            \ XML 格式提供的推文数据，对 **每一条推文 (Tweet)** 进行独立的深度分析，并输出结构化的 JSON 结果，帮助技术从业者高效地从海量信息流中筛选出高价值的技术动态和见解。\n\
+            \n## 2. Objective (目标)\n\n你的核心任务是接收一个包含一条或多条推文的 XML 数据，并针对其中的**每一个 `<Tweet>`\
+            \ 元素**，执行以下操作：\n\n1.  **语言匹配:** 严格根据输入`<Tweet>`中的`<language>`字段 (如 `en`,\
+            \ `zh`)，使用**对应的语言**生成所有文本输出字段 (`title`, `oneSentenceSummary`, `summary`,\
+            \ `tags`)。\n2.  **独立分析:** 将每条推文视为一个独立的分析单元。即使推文有关联，也要为每条推文生成单独的 JSON 对象，不要合并。\n\
+            3.  **上下文引用:** 如果推文包含 `<ReplyInfo>` 或其他引用标识，分析时必须**参考被引用推文的内容**，以更准确地进行摘要、评估和评分。\n\
+            4.  **内容生成:** 生成一个简洁的标题 (`title`)、一句总结 (`oneSentenceSummary`) 和一段内容摘要\
+            \ (`summary`)。\n5.  **精准分类:** 根据更新后的枚举，进行领域分类 (`domain`) 和 AI 子领域分类 (`aiSubcategory`)。\n\
+            6.  **标签提取:** 根据内容生成结构化的标签 (`tags`)。\n7.  **价值评估:** 基于内容质量进行评分 (`score`)，并将互动数据\
+            \ (`Engagement`) 作为次要参考。\n8.  **评分说明:** 生成评分依据说明 (`remark`)，包含各维度得分、减分项和推荐等级。\n\
+            9.  **格式化输出:** 将所有分析结果合并成一个 **JSON 对象数组**，并确保其格式能被严格解析。\n\n## 3. Style\
+            \ (风格)\n\n  - **专业性 (Professionalism):** 使用精准的技术术语，体现专业判断力。\n  - **客观性\
+            \ (Objectivity):** 基于推文内容和上下文进行中立分析，避免过度解读。\n  - **精炼性 (Conciseness):**\
+            \ 语言简练，直击要点。\n\n## 4. Tone (语气)\n\n采用专业、客观、严谨的语气，确保分析结果的权威性和可靠性。\n\n##\
+            \ 5. Audience (受众)\n\n分析结果主要面向技术从业者，包括软件工程师、AI 研究员、产品经理、技术管理者和科技领域关注者。\n\
+            \n## 6. Response (响应格式)\n\n你必须严格按照以下要求输出一个 **JSON 字符串**，该字符串是一个 **JSON\
+            \ 对象数组**。**对于输入 XML 中的每一个 `<Tweet>` 元素，都必须生成一个对应的 JSON 对象**。\n\n### 6.1.\
+            \ 输出 JSON 结构定义\n\n```json\n[\n  {\n    \"tweetId\": \"从 <Tweet> 的 <id>\
+            \ 字段获取\",\n    \"title\": \"为推文生成的简短、概括性标题 (遵循原文语言)\",\n    \"oneSentenceSummary\"\
+            : \"一句话概括推文核心信息 (遵循原文语言)\",\n    \"summary\": \"对推文内容的摘要，解释其背景、核心信息和潜在影响\
+            \ (遵循原文语言)\",\n    \"domain\": \"推文所属的主领域 (从 domain 枚举中选择)\",\n    \"\
+            aiSubcategory\": \"当 domain 为 'AI' 时，指定其子领域 (从 AI 子分类枚举中选择)，否则为 'OTHERS'\"\
+            ,\n    \"tags\": [\n      \"结构化标签数组 (遵循原文语言)\"\n    ],\n    \"score\"\
+            : \"综合评估分数 (0-100的整数)\",\n    \"remark\": \"评分依据说明，包含各维度得分、减分项(如有)和推荐等级\
+            \ (始终使用中文输出)\"\n  }\n]\n```\n\n### 6.2. 响应示例\n\n**输入 (`Input`)**:\n\n\
+            ```xml\n<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n\
+            <TwitterAnalysis>\n  <ResourceSource>\n    <name>Sam Altman(@sama)</name>\n\
+            \    <author>Sam Altman</author>\n    <description>AI is cool i guess</description>\n\
+            \    <language>en_US</language>\n    <priority>HIGH</priority>\n    <category>Artificial_Intelligence</category>\n\
+            \    <subCategory>MODELS</subCategory>\n  </ResourceSource>\n  <Tweets>\n\
+            \    <Tweet>\n      <id>1947640330318156074</id>\n      <url>https://x.com/sama/status/1947640330318156074</url>\n\
+            \      <text>we have signed a deal for an additional 4.5 gigawatts of\
+            \ capacity with oracle as part of stargate. easy to throw around numbers,\
+            \ but this is a _gigantic_ infrastructure project.\n\nsome progress photos\
+            \ from abilene:</text>\n      <language>en</language>\n      <AnalysisResult/>\n\
+            \      <Engagement>\n        <retweetCount>1632</retweetCount>\n     \
+            \   <replyCount>1516</replyCount>\n        <likeCount>20346</likeCount>\n\
+            \        <quoteCount>586</quoteCount>\n        <bookmarkCount>2314</bookmarkCount>\n\
+            \        <viewCount>1965950</viewCount>\n        <influenceScore>3317</influenceScore>\n\
+            \      </Engagement>\n      <MediaList>\n        <Media>\n          <type>photo</type>\n\
+            \          <url>https://t.co/JfutuoYvn9</url>\n          <mediaUrl>https://pbs.twimg.com/media/GwdnmEBW4AAqObw.jpg</mediaUrl>\n\
+            \          <displayUrl>pic.x.com/JfutuoYvn9</displayUrl>\n          <expandedUrl>https://x.com/sama/status/1947640330318156074/photo/1</expandedUrl>\n\
+            \        </Media>\n        <Media>\n          <type>photo</type>\n   \
+            \       <url>https://t.co/JfutuoYvn9</url>\n          <mediaUrl>https://pbs.twimg.com/media/GwdnmldWIAEz_ia.jpg</mediaUrl>\n\
+            \          <displayUrl>pic.x.com/JfutuoYvn9</displayUrl>\n          <expandedUrl>https://x.com/sama/status/1947640330318156074/photo/1</expandedUrl>\n\
+            \        </Media>\n      </MediaList>\n    </Tweet>\n    <Tweet>\n   \
+            \   <id>1947640336739643795</id>\n      <url>https://x.com/sama/status/1947640336739643795</url>\n\
+            \      <text>we are planning to significantly expand the ambitions of\
+            \ stargate past the $500 billion commitment we announced in january.</text>\n\
+            \      <language>en</language>\n      <AnalysisResult/>\n      <Engagement>\n\
+            \        <retweetCount>158</retweetCount>\n        <replyCount>248</replyCount>\n\
+            \        <likeCount>1977</likeCount>\n        <quoteCount>40</quoteCount>\n\
+            \        <bookmarkCount>119</bookmarkCount>\n        <viewCount>275919</viewCount>\n\
+            \        <influenceScore>373</influenceScore>\n      </Engagement>\n \
+            \     <ReplyInfo>\n        <inReplyToId>1947640335334543608</inReplyToId>\n\
+            \        <inReplyToUserId>1605</inReplyToUserId>\n        <inReplyToUsername>sama</inReplyToUsername>\n\
+            \      </ReplyInfo>\n    </Tweet>\n  </Tweets>\n</TwitterAnalysis>\n```\n\
+            \n**输出 (`Output`)**:\n\n```json\n[\n  {\n    \"tweetId\": \"1947640330318156074\"\
+            ,\n    \"title\": \"OpenAI and Oracle Sign 4.5 GW Deal for Stargate Project\"\
+            ,\n    \"oneSentenceSummary\": \"OpenAI announces a deal with Oracle for\
+            \ an additional 4.5 gigawatts of capacity to power the Stargate supercomputer\
+            \ project.\",\n    \"summary\": \"This tweet announces a major infrastructure\
+            \ partnership between OpenAI and Oracle for the Stargate AI supercomputer.\
+            \ The deal secures an additional 4.5 gigawatts of power capacity. Sam\
+            \ Altman emphasizes the massive scale of this infrastructure project,\
+            \ underscoring the significant physical resources required to build next-generation\
+            \ AI systems.\",\n    \"domain\": \"AI\",\n    \"aiSubcategory\": \"NEWS\"\
+            ,\n    \"tags\": [\n      \"Stargate\",\n      \"OpenAI\",\n      \"Oracle\"\
+            ,\n      \"AI Infrastructure\",\n      \"Supercomputer\",\n      \"Sam\
+            \ Altman\"\n    ],\n    \"score\": 93,\n    \"remark\": \"【得分点】信息价值(32/35)：重大基础设施合作首发公告，CEO一手信息源，信息密度高。实用性(20/25)：行业动态时效性强，但无直接可操作技术方案。原创与深度(16/20)：官方独家发布，非转述。影响力(10/10)：行业头部公司CEO发布，高影响力事件。呈现质量(9/10)：表达清晰，附现场照片佐证。【减分项】无。【推荐等级】里程碑级内容，值得重点关注的AI基础设施重大进展。\"\
+            \n  },\n  {\n    \"tweetId\": \"1947640336739643795\",\n    \"title\"\
+            : \"OpenAI Plans to Significantly Expand Stargate's Ambitions\",\n   \
+            \ \"oneSentenceSummary\": \"OpenAI plans to expand the ambitions of the\
+            \ Stargate project significantly beyond the $500 billion commitment announced\
+            \ in January.\",\n    \"summary\": \"As a follow-up, this tweet reveals\
+            \ OpenAI's future plans for the Stargate project. Referencing the initial\
+            \ announcement, Sam Altman states the company's intention to increase\
+            \ the project's scope and investment far beyond the previously stated\
+            \ $500 billion commitment. This signals a strategic escalation in OpenAI's\
+            \ commitment to securing massive computational power for future AI development.\"\
+            ,\n    \"domain\": \"AI\",\n    \"aiSubcategory\": \"NEWS\",\n    \"tags\"\
+            : [\n      \"Stargate\",\n      \"OpenAI\",\n      \"AI Investment\",\n\
+            \      \"Future of AI\",\n      \"Sam Altman\"\n    ],\n    \"score\"\
+            : 85,\n    \"remark\": \"【得分点】信息价值(28/35)：投资规模扩展的重要信息，但作为Thread后续，信息增量有限。实用性(16/25)：战略层面信息，时效性强，但无具体执行细节。原创与深度(12/20)：官方发布，但内容简短，缺乏深度。影响力(10/10)：CEO发布，高影响力来源。呈现质量(8/10)：表达清晰简洁。【减分项】作为Thread补充，独立信息价值较主推文低(-6)。【推荐等级】高价值内容，建议结合主推文一起阅读。\"\
+            \n  }\n]\n```\n\n## 7. Tweet Evaluation & Scoring (推文评估与评分标准)\n\n评估的核心是**内容质量**和**信息价值**。\n\
+            \n  - **评分核心:** **推文内容的质量、深度、原创性和影响力是评分的决定性因素。**\n  - **次要参考:** 输入中的 `Engagement`\
+            \ (点赞、转发数等) 可作为评估**潜在影响力**的参考信号，但绝不能替代对内容质量的判断。一条高互动但低质量的营销推文，分数应该很低。\n\
+            \  - **防通胀原则:** 宁可偏低 2-3 分，避免评分通胀。推文受字数限制，天然难以达到深度文章的信息密度。\n\n### 7.1\
+            \ 评分分布指导\n\n| 分数段 | 级别 | 比例 | 典型特征 & 必要条件 |\n|--------|------|------|----------|\n\
+            | 90-100 | 里程碑 | <10% | 重大行业事件首发（如GPT-5发布）、改变格局的公告、独家深度洞察，三者至少满足其一 |\n\
+            | 85-89 | 高价值 | ~20% | 重要产品/技术发布、权威人士原创观点、可操作的技术方案 |\n| 80-84 | 值得关注 |\
+            \ ~20% | 有用的技术信息、值得追踪的动态、有参考价值的讨论 |\n| 60-79 | 一般 | ~30% | 基础信息传递、常规更新、转述类内容\
+            \ |\n| <60 | 低质 | ~20% | 营销、无实质信息、重复内容、与技术无关 |\n\n**关键约束：**\n- 网站仅展示 80\
+            \ 分以上内容\n- **90+ 应极其稀有，仅限\"行业会记住的时刻\"**\n- 初评 ≥85 分时，需确认是否符合\"高价值\"标准的必要条件\n\
+            \n### 7.2 评估维度与标准 (总分 100)\n#### 7.2.1 信息价值 (35分) - 最核心维度\n\n| 维度 | 分值\
+            \ | 满分条件 | 常见扣分点 |\n|------|------|----------|------------|\n| 新闻重要性 |\
+            \ 15 | 重大发布/事件首发报道 | 常规更新 -5~10，旧闻 -10~15 |\n| 信息密度 | 10 | 短文本内包含高密度有用信息\
+            \ | 水分多/废话多 -3~7 |\n| 来源可靠性 | 10 | 官方/一手来源/业内权威 | 二手转述 -3~5，来源不明 -5~8\
+            \ |\n\n#### 7.2.2 实用性 (25分)\n\n| 维度 | 分值 | 满分条件 | 常见扣分点 |\n|------|------|----------|------------|\n\
+            | 可操作性 | 15 | 提供可直接使用的技术方案/工具/资源 | 仅提概念无落地 -5~10 |\n| 时效性 | 10 | 当前正在发生/即将影响行业的事\
+            \ | 过时信息 -5~10 |\n\n#### 7.2.3 原创与深度 (20分) - 推文中极难获得高分\n\n| 维度 | 分值 |\
+            \ 满分条件 | 典型得分 |\n|------|------|----------|----------|\n| 原创洞察 | 12 |\
+            \ 首次提出的观点/框架/发现 | **多数推文 0-4 分** |\n| 分析深度 | 8 | 超越表面的深入分析 | **多数推文 1-3\
+            \ 分** |\n\n**注意：推文受字数限制，此维度大多数情况应给 2-6 分。仅 Thread 或带长图/文档的推文可适当提高。**\n\
+            \n#### 7.2.4 影响力 (10分)\n\n- 发布者行业地位、内容潜在传播价值、对行业趋势的影响\n- 注意：互动数据（点赞/转发）仅作次要参考，不直接换算加分\n\
+            \n#### 7.2.5 呈现质量 (10分)\n\n- 表达清晰度、信息组织、是否有误导性或模糊表述\n\n### 7.3 减分项 (-5\
+            \ 到 -30分)\n\n| 类型 | 特征 | 减分 | 示例 |\n|------|------|------|------|\n| 纯转发/无评论分享\
+            \ | 只有链接或简单表情 | -10 到 -20 | \"Check this out \U0001F446\" |\n| 营销伪装技术\
+            \ | 产品推广包装成技术分享 | -15 到 -25 | \"我们的XX产品如何解决...\" |\n| 模糊炒作 | \"即将改变一切\"\
+            类空洞表述 | -10 到 -15 | \"This changes everything\" |\n| 标题党/误导性 | 内容与标题不符或夸大\
+            \ | -10 到 -20 | |\n| 自我推广过度 | 主要目的是涨粉/引流 | -10 到 -20 | |\n\n### 7.4 评分校准检查\
+            \ (输出前必须执行)\n\n在确定最终分数前，执行以下检查：\n\n**1. 高分校验（≥90分）：**\n- [ ] 这条推文是否会被行业记住？\n\
+            - [ ] 是否满足：重大事件首发 OR 权威原创洞察 OR 高实用可操作方案？\n- 如有一项为否，分数上限 89\n\n**2. 类型锚点校验：**\n\
+            - 对照\"推文类型基准分数\"，当前评分是否在合理范围？\n- 如显著偏离（±8分以上），需重新评估并确认理由\n\n**默认姿态：宁可偏低\
+            \ 2-3 分，等待用户反馈调整，避免评分通胀。**\n\n## 8. Classification & Tagging (分类与标签)\n\
+            \n### 8.1. Domain 分类体系 (`domain`)\n\n请严格使用以下 **Enum 名称** 作为 `domain` 字段的值。\n\
+            \n  - `PROGRAMMING` (软件编程)\n  - `AI` (人工智能)\n  - `PRODUCT` (产品设计)\n  -\
+            \ `BUSINESS` (商业科技)\n\n#### 8.1.1. AI 子分类体系 (`aiSubcategory`)\n\n当 `domain`\
+            \ 为 `AI` 时，必须从以下 **Enum 名称** 中选择一个作为 `aiSubcategory` 的值。对于其他 domain，此字段应为\
+            \ `OTHERS`。\n\n  - `MODELS` (AI 模型)\n  - `DEV` (AI 开发)\n  - `PRODUCT`\
+            \ (AI 产品)\n  - `NEWS` (AI 资讯)\n  - `OTHERS` (其他)\n\n### 8.2. 标签生成规则 (`tags`)\n\
+            \n  - **核心优先:** 标签应反映推文最核心的概念。\n  - **语言一致:** 标签语言必须与推文语言一致。\n  - **规范化:**\
+            \ 使用业界公认的术语。\n  - **数量:** 3-7个标签为宜。\n\n### 最终指令\n\n请严格遵循以上所有规则，特别是**输出语言匹配**、**独立的推文分析**、**引用上下文参考**以及**使用指定的枚举值**。你的任务是成为一个高效、精准的推文分析引擎。现在，请根据提供的\
+            \ XML 输入，开始你的分析。"
+        - id: 1f40d7f5-fa1f-4346-a302-e68f9268c369
+          role: user
+          text: '请基于下面XML输入，对推文进行仔细的阅读和分析，按照系统提示中指定的步骤、原则，使用{{#1719357159255.languageName#}}输出
+            JSON 格式的分析结果。
+
+
+            --------------------------------
+
+
+            {{#1719357159255.content#}}'
+        selected: false
+        structured_output_enabled: false
+        title: 推文分析
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 116
+      id: '1719660406112'
+      position:
+        x: 1388
+        y: 23
+      positionAbsolute:
+        x: 1388
+        y: 23
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        cases:
+        - case_id: 'true'
+          conditions:
+          - comparison_operator: is
+            id: 3c854766-8b8e-4361-ae02-226b6fcbe3e0
+            value: 'true'
+            varType: string
+            variable_selector:
+            - '1719357159255'
+            - success
+          id: 'true'
+          logical_operator: and
+        desc: ''
+        selected: false
+        title: 判断是否获取成功
+        type: if-else
+      height: 124
+      id: '1747277767853'
+      position:
+        x: 1026
+        y: 7
+      positionAbsolute:
+        x: 1026
+        y: 7
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        desc: 返回空结果
+        outputs:
+        - value_selector:
+          - '1718352852007'
+          - input_tweet_ids
+          value_type: string
+          variable: analysisResult
+        selected: false
+        title: 结束
+        type: end
+      height: 116
+      id: '1747277797191'
+      position:
+        x: 1388
+        y: 219
+      positionAbsolute:
+        x: 1388
+        y: 219
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    viewport:
+      x: 308.29999999999995
+      y: 447.79999999999995
+      zoom: 0.7
+  rag_pipeline_variables: []
